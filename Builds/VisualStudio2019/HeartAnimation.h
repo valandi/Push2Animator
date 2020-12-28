@@ -26,7 +26,6 @@ class HeartAnimation : public IAnimation
 
 	    void initializeMatrix() {
             DBG("Initializing the heart");
-
 		    transformMatrix(
                 std::vector<std::vector<int>>
                 {

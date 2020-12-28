@@ -25,7 +25,16 @@ class Animation
 
         Animation() {
 
-        }
+        };
+
+        ~Animation() {
+
+        };
+
+        Animation(string name, std::vector<std::vector<int>> initialMatrix) {
+            this.animationName = name;
+            this.matrix = initialMatrix;
+        };
 
         /**
           Get's the initial 8x8 matrix (the first frame of the animation 
@@ -61,4 +70,3 @@ class Animation
 
         string animationName = "AnimationName";
 };
-

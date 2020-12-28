@@ -9,6 +9,7 @@ class AnimationManager
 		AnimationManager(IAnimation* newAnimation) {
 			this->animation = newAnimation;
 			this->shouldAnimate = false;
+			this->speedFactor = 3;
 		};
 
 		void setAnimation(IAnimation* newAnimation) {
@@ -16,11 +17,9 @@ class AnimationManager
 		}
 
 		void animate() {
-			DBG("Animating...");
 			if (shouldAnimate) {
 				animation->goToNextFrame();
-
-				Time::waitForMillisecondCounter(Time::getMillisecondCounter() + 300);
+				Time::waitForMillisecondCounter(Time::getMillisecondCounter() + 100 * speedFactor);
 			}
 
 		};
@@ -65,9 +64,16 @@ class AnimationManager
 			shouldAnimate = false; 
 		}
 
+		void setSpeedFactor(int newSpeedFactor) {
+			if (newSpeedFactor >= 1 && newSpeedFactor <= 10) {
+				this->speedFactor = newSpeedFactor;
+			}
+		}
+
 		bool isAnimating() { return shouldAnimate; }
 
 	private:
 		IAnimation* animation;
 		bool shouldAnimate;
+		int speedFactor;
 };

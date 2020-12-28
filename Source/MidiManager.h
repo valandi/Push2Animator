@@ -60,8 +60,6 @@
 #include "HeartAnimation.h"
 #include "DiagnoalAnimation.h"
 
-
-
 //==============================================================================
 struct MidiDeviceListEntry : ReferenceCountedObject
 {
@@ -76,10 +74,10 @@ struct MidiDeviceListEntry : ReferenceCountedObject
 
 
 //==============================================================================
-class MidiManager  : public Component,
-                  private Timer,
-                  private MidiInputCallback,
-                  private AsyncUpdater
+class MidiManager : public Component,
+    private Timer,
+    private MidiInputCallback,
+    private AsyncUpdater, public juce::Slider::Listener
 {
 public:
 
@@ -130,9 +128,9 @@ public:
 
     //==============================================================================
     MidiManager()
-        : midiKeyboard       (keyboardState, MidiKeyboardComponent::horizontalKeyboard),
-          midiOutputSelector (new MidiDeviceListBox ("Midi Output Selector", *this, false)),
-          animationManager(new HeartAnimation())
+        : midiKeyboard(keyboardState, MidiKeyboardComponent::horizontalKeyboard),
+        midiOutputSelector(new MidiDeviceListBox("Midi Output Selector", *this, false)),
+        animationManager(new HeartAnimation())
     {
 
         addAndMakeVisible(textLabel);
@@ -142,22 +140,28 @@ public:
         animationMap[1] = new HeartAnimation();
         animationMap[2] = new DiagonalAnimation();
 
+        addAndMakeVisible(rotarySlider);
+        rotarySlider.setRange(1, 10);
+        rotarySlider.addListener(this);
+
+
         addAndMakeVisible(animationDropDown);
         animationDropDown.addItem("Heart", 1);
         animationDropDown.addItem("Diagonal", 2);
+        animationDropDown.setSelectedId(1);
 
-        addLabelAndSetStyle (midiOutputLabel);
-        addLabelAndSetStyle (chooseAnimationLabel);
 
-        midiKeyboard.setName ("MIDI Keyboard");
-        addAndMakeVisible (midiKeyboard);
+        addLabelAndSetStyle(midiOutputLabel);
+        addLabelAndSetStyle(chooseAnimationLabel);
+
+        midiKeyboard.setName("MIDI Keyboard");
+        addAndMakeVisible(midiKeyboard);
 
         addAndMakeVisible(startButton);
         addAndMakeVisible(stopButton);
 
         startButton.onClick = [this]
         {
-
             std::thread(
                 [this] {
                     if (!animationManager.isAnimating()) {
@@ -165,12 +169,11 @@ public:
                         animationManager.startAnimating();
                         animate();
                     }
-            }).detach();
+                }).detach();
         };
 
         stopButton.onClick = [this]
         {
-
             std::thread(
                 [this] {
                     animationManager.stopAnimating();
@@ -187,14 +190,14 @@ public:
                     makeBlinks();
                 }
             ).detach();
-        }; 
+        };
 
-        addAndMakeVisible (midiOutputSelector.get());
+        addAndMakeVisible(midiOutputSelector.get());
 
         initializeMidiMap();
 
         setSize(732, 520);
-        startTimer (500);
+        startTimer(500);
     }
 
     ~MidiManager() override
@@ -206,7 +209,7 @@ public:
         midiOutputSelector.reset();
     }
 
-    void clearColor() 
+    void clearColor()
     {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -218,6 +221,11 @@ public:
             sendToOutputs(juce::MidiMessage(176, address, BLACK));
         }
 
+    }
+
+    void sliderValueChanged(juce::Slider* slider) override {
+        if (slider == &rotarySlider)
+            animationManager.setSpeedFactor(slider->getValue());
     }
 
     void animate() {
@@ -293,6 +301,11 @@ public:
     void resized() override
     {
         auto margin = 10;
+
+        auto area = getLocalBounds().reduced(10);
+        auto row = area.removeFromTop(100);
+
+        rotarySlider.setBounds(row.removeFromLeft(100).reduced(5));
 
         midiOutputLabel.setBounds (
             (getWidth() / 2) + margin, 
@@ -600,6 +613,11 @@ private:
     juce::Font textFont{ 12.0f };
     juce::ComboBox animationDropDown;
     std::map<int, IAnimation*> animationMap;
+
+    Slider rotarySlider{ Slider::RotaryHorizontalVerticalDrag, Slider::NoTextBox },
+        verticalSlider{ Slider::LinearVertical, Slider::NoTextBox },
+        barSlider{ Slider::LinearBar, Slider::NoTextBox },
+        incDecSlider{ Slider::IncDecButtons, Slider::TextBoxBelow };
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MidiManager)

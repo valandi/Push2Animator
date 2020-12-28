@@ -15,12 +15,12 @@ public:
     //==============================================================================
     Application() = default;
 
-    const juce::String getApplicationName() override       { return "MidiManager"; }
+    const juce::String getApplicationName() override       { return "Push2Animator"; }
     const juce::String getApplicationVersion() override    { return "1.0.0"; }
 
     void initialise (const juce::String&) override
     {
-        mainWindow.reset (new MainWindow ("MidiManager", new MidiManager, *this));
+        mainWindow.reset (new MainWindow ("Push2Animator", new MidiManager, *this));
     }
 
     void shutdown() override                         { mainWindow = nullptr; }
